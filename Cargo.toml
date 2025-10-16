@@ -1,0 +1,64 @@
+[package]
+name = "telegram-multitool-bot"
+version = "0.1.0"
+edition = "2021"
+authors = ["Your Name <your.email@example.com>"]
+description = "Production-ready Telegram bot with ToDo, Reminders, and File Conversion"
+
+[dependencies]
+# Async runtime - основа для асинхронного выполнения
+tokio = { version = "1.35", features = ["full"] }
+
+# Telegram bot framework - взаимодействие с Telegram API
+teloxide = { version = "0.12", features = ["macros", "auto-send"] }
+
+# Database - работа с PostgreSQL/SQLite
+sqlx = { version = "0.7", features = [
+    "runtime-tokio-rustls",  # Async runtime для SQLx
+    "postgres",               # PostgreSQL драйвер
+    "sqlite",                 # SQLite для разработки
+    "chrono",                 # Поддержка дат
+    "uuid",                   # UUID типы
+    "migrate"                 # Автоматические миграции
+] }
+
+# Serialization - сериализация данных (JSON, TOML)
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+toml = "0.8"
+
+# Date and time - работа с датами и временем
+chrono = { version = "0.4", features = ["serde"] }
+
+# Error handling - обработка ошибок
+thiserror = "1.0"   # Макросы для создания кастомных ошибок
+anyhow = "1.0"      # Удобная обработка ошибок
+
+# Logging - логирование для production
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# File processing - обработка файлов (минимальный набор)
+image = "0.24"      # Работа с изображениями (resize, convert)
+# NOTE: pdf = "0.8" имеет проблемы с зависимостями, используем альтернативу
+# Для PDF конвертации будем использовать внешние инструменты или другие крейты
+
+# Utils - утилиты
+uuid = { version = "1.6", features = ["v4", "serde"] }
+dotenv = "0.15"     # Загрузка переменных окружения из .env
+once_cell = "1.19"  # Ленивая инициализация статических переменных
+
+# Configuration - управление конфигурацией
+config = "0.13"
+
+[dev-dependencies]
+# Testing - тестирование
+tokio-test = "0.4"
+mockall = "0.12"
+
+[profile.release]
+# Оптимизация для production
+opt-level = 3           # Максимальная оптимизация
+lto = true              # Link-time optimization
+codegen-units = 1       # Улучшает оптимизацию (но замедляет компиляцию)
+strip = true            # Удаляет отладочную информацию из бинарника

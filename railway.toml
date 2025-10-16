@@ -1,0 +1,21 @@
+[build]
+builder = "dockerfile"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+startCommand = "/app/telegram-multitool-bot"
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 10
+
+[[services]]
+name = "telegram-bot"
+
+[services.env]
+# Railway automatically provides DATABASE_URL for PostgreSQL
+# Добавьте BOT_TOKEN через Railway Dashboard > Variables
+ENVIRONMENT = "production"
+LOG_LEVEL = "info"
+LOG_FORMAT = "json"
+DB_MAX_CONNECTIONS = "10"
+DB_MIN_CONNECTIONS = "2"
+APP_NAME = "telegram-multitool-bot"
