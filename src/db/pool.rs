@@ -1,20 +1,20 @@
-// Database pool - управление пулом соединений с PostgreSQL
+// Database pool - PostgreSQL connection pool management
 //
-// Использует SQLx для асинхронной работы с БД
-// Пул создаётся один раз при старте приложения
+// Uses SQLx for asynchronous database operations
+// Pool is created once at application startup
 
 use crate::config::DatabaseConfig;
 use crate::error::{AppError, Result};
 use sqlx::postgres::{PgPool, PgPoolOptions};
 use std::time::Duration;
 
-/// Создание пула соединений с базой данных
+/// Create database connection pool
 ///
 /// # Arguments
-/// * `config` - конфигурация базы данных
+/// * `config` - database configuration
 ///
 /// # Returns
-/// Пул соединений или ошибка
+/// Connection pool or error
 pub async fn create_pool(config: &DatabaseConfig) -> Result<PgPool> {
     tracing::info!("Creating database pool...");
     tracing::debug!("Database URL: {}", mask_db_url(&config.url));
@@ -23,8 +23,8 @@ pub async fn create_pool(config: &DatabaseConfig) -> Result<PgPool> {
         .max_connections(config.max_connections)
         .min_connections(config.min_connections)
         .acquire_timeout(Duration::from_secs(30))
-        .idle_timeout(Duration::from_secs(600)) // 10 минут
-        .max_lifetime(Duration::from_secs(1800)) // 30 минут
+        .idle_timeout(Duration::from_secs(600)) // 10 minutes
+        .max_lifetime(Duration::from_secs(1800)) // 30 minutes
         .connect(&config.url)
         .await
         .map_err(|e| {
@@ -41,7 +41,7 @@ pub async fn create_pool(config: &DatabaseConfig) -> Result<PgPool> {
     Ok(pool)
 }
 
-/// Проверка соединения с базой данных
+/// Check database connection
 pub async fn check_connection(pool: &PgPool) -> Result<()> {
     sqlx::query("SELECT 1")
         .fetch_one(pool)
@@ -55,7 +55,7 @@ pub async fn check_connection(pool: &PgPool) -> Result<()> {
     Ok(())
 }
 
-/// Маскирование пароля в URL базы данных для логирования
+/// Mask password in database URL for logging
 fn mask_db_url(url: &str) -> String {
     if let Some(at_pos) = url.find('@') {
         if let Some(colon_pos) = url[..at_pos].rfind(':') {

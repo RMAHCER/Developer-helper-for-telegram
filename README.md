@@ -1,181 +1,181 @@
-# Telegram Multitool Bot 🤖
+#Telegram Multitool Bot 🤖
 
-Production-ready Telegram бот на Rust с функциями управления задачами, напоминаниями и конвертацией файлов.
+A production-ready Telegram bot written in Rust with task management, reminders, and file conversion features.
 
-## Возможности
+## Features
 
-- ✅ **Управление задачами (ToDo)**
-  - Создание, просмотр, редактирование задач
-  - Статусы и приоритеты
-  - Фильтрация по статусу
+- ✅ **Task Management (ToDo)**
+- Create, view, and edit tasks
+- Statuses and priorities
+- Filter by status
 
-- ⏰ **Система напоминаний**
-  - Одноразовые и повторяющиеся напоминания
-  - Напоминания для задач
-  - Планировщик на Tokio tasks
+- ⏰ **Reminder System**
+- One-time and recurring reminders
+- Task reminders
+- Tokio Tasks scheduler
 
-- 📄 **Конвертация файлов**
-  - Изображения (PNG, JPEG, WebP)
-  - Документы
-  - Сжатие и оптимизация
+- 📄 **File Conversion**
+- Images (PNG, JPEG, WebP)
+- Documents
+- Compression and optimization
 
-## Технологический стек
+## Tech Stack
 
-- **Rust** - основной язык
-- **Tokio** - асинхронный runtime
-- **Teloxide** - фреймворк для Telegram Bot API
-- **SQLx** - работа с PostgreSQL
-- **Railway** - платформа для деплоя
+- **Rust** - main language
+- **Tokio** - asynchronous runtime
+- **Teloxide** - framework for Telegram Bot API
+- **SQLx** - work with PostgreSQL
+- **Railway** - deployment platform
 
-## Архитектура
+## Architecture
 
-Проект следует Clean Architecture с четким разделением на слои:
+The project follows a Clean Architecture with a clear separation of Layers:
 
 ```
-┌─────────────────────────────────────┐
-│     Telegram API (teloxide)         │
-└────────────────┬────────────────────┘
-                 │
+┌───────────────────────────────────────────┐
+│ Telegram API (teloxide) │
+└─────────────────┬────────────────────┘ 
+│
 ┌────────────────▼────────────────────┐
-│  Bot Layer (Handlers & Commands)    │
-└───┬──────────┬─────────────┬────────┘
-    │          │             │
-┌───▼───┐  ┌──▼───┐   ┌─────▼─────┐
-│ ToDo  │  │Conv. │   │ Reminder  │
-│Service│  │Service│   │ Service   │
-└───┬───┘  └──┬───┘   └─────┬─────┘
-    │         │             │
+│ Bot Layer (Handlers & Commands) │
+└───┬──────────┬─────────────┬────────┘ 
+│ │ │
+┌───▼───┐ ┌──▼───┐ ┌─────▼─────┐
+│ ToDo │ │Conv. │ │ Reminder │
+│Service│ │Service│ │ Service │
+└───┬───┘ └──┬───┘ └─────┬─────┘ 
+│ │ │
 ┌───▼─────────▼─────────────▼──────┐
-│   Repository Layer (SQLx)        │
+│ Repository Layer (SQLx) │
 └────────────┬─────────────────────┘
-             │
-┌────────────▼─────────────────────┐
-│      PostgreSQL Database         │
-└──────────────────────────────────┘
+│
+┌────────────▼────────────────────────┐
+│ PostgreSQL Database │
+└────────────────────────────────────┘
 ```
 
-## Быстрый старт
+## Quick Start
 
-### Предварительные требования
+### Prerequisites
 
 - Rust 1.75+
-- PostgreSQL 14+ (или SQLite для разработки)
-- Токен бота от [@BotFather](https://t.me/BotFather)
+- PostgreSQL 14+ (or SQLite for development)
+- Bot token from [@BotFather](https://t.me/BotFather)
 
-### Установка
+### Installation
 
-1. Клонируйте репозиторий:
+1. Clone the repository:
 ```bash
 git clone <repo-url>
 cd telegram-bot
 ```
 
-2. Скопируйте `.env.example` в `.env`:
+2. Copy `.env.example` to `.env`:
 ```bash
 cp .env.example .env
 ```
 
-3. Настройте переменные окружения в `.env`:
+3. Set environment variables in `.env`:
 ```env
 BOT_TOKEN=your_bot_token_from_botfather
 DATABASE_URL=postgres://user:password@localhost:5432/telegram_bot
 ```
 
-4. Запустите миграции базы данных:
+4. Run Database migration:
 ```bash
 cargo install sqlx-cli
 sqlx database create
 sqlx migrate run
 ```
 
-5. Запустите бота:
+5. Run the bot:
 ```bash
 cargo run --release
 ```
 
-## Команды бота
+## Bot commands
 
-### Управление задачами
-- `/addtodo <текст>` - добавить новую задачу
-- `/listtodos` - показать все задачи
-- `/completetodo <id>` - отметить задачу выполненной
-- `/deletetodo <id>` - удалить задачу
+### Task management
+- `/addtodo <text>` - add a new task
+- `/listtodos` - show all tasks
+- `/completetodo <id>` - mark a task as completed
+- `/deletetodo <id>` - delete a task
 
-### Напоминания
-- `/remind <время> <текст>` - установить напоминание
-  - Примеры: `/remind 15m Проверить почту`, `/remind 2h Встреча`
-  - Форматы: `5m` (минуты), `2h` (часы), `1d` (дни)
-- `/listreminders` - показать активные напоминания
-- `/cancelreminder <id>` - отменить напоминание
+### Reminders
+- `/remind <time> <text>` - set a reminder
+- Examples: `/remind 15m Check mail`, `/remind 2h Meeting`
+- Formats: `5m` (minutes), `2h` (hours), `1d` (days)
+- `/listreminders` - show active reminders
+- `/cancelreminder <id>` - cancel reminder
 
-### Общее
-- `/start` - начать работу с ботом
-- `/help` - показать справку
+### General
+- `/start` - start working with the bot
+- `/help` - show help
 
-## Структура проекта
+## Project Structure
 
 ```
 telegram-bot/
 ├── src/
-│   ├── main.rs              # Entry point
-│   ├── config.rs            # Конфигурация
-│   ├── error.rs             # Обработка ошибок
-│   ├── bot/                 # Telegram бот
-│   │   ├── handlers.rs      # Обработчики команд
-│   │   ├── commands.rs      # Реализация команд
-│   │   ├── keyboards.rs     # Клавиатуры
-│   │   └── state.rs         # FSM состояния
-│   ├── todo/                # ToDo функционал
-│   │   ├── service.rs
-│   │   ├── repository.rs
-│   │   └── models.rs
-│   ├── reminder/            # Напоминания
-│   │   ├── scheduler.rs     # Планировщик
-│   │   ├── notifier.rs      # Отправка уведомлений
-│   │   ├── service.rs
-│   │   └── repository.rs
-│   ├── converter/           # Конвертация файлов
-│   │   └── processors/
-│   ├── db/                  # База данных
-│   │   ├── pool.rs
-│   │   └── migrations.rs
-│   └── shared/              # Общие утилиты
-├── migrations/              # SQL миграции
-├── Dockerfile               # Docker образ
-├── railway.toml             # Конфиг Railway
+│ ├── main.rs # Entry point
+│ ├── config.rs # Configuration
+│ ├── error.rs # Error handling
+│ ├── bot/ # Telegram bot
+│ │ ├── handlers.rs # Command handlers
+│ │ ├── commands.rs # Command implementation
+│ │ ├── keyboards.rs # Keyboards
+│ │ └── state.rs # State FSM
+│ ├── todo/ # ToDo functionality
+│ │ ├── service.rs
+│ │ ├── repository.rs
+│ │ └── models.rs
+│ ├── reminder/ # Reminders
+│ │ ├── scheduler.rs # Scheduler
+│ │ ├── notifier.rs # Sending notifications
+│ │ ├── service.rs
+│ │ └── repository.rs
+│ ├── converter/ # File conversion
+│ │ └── processors/
+│ ├── db/ # Database
+│ │ ├── pool.rs
+│ │ └── migrations.rs
+│ └── shared/ # Shared utilities
+├── migrations/ # SQL migrations
+├── Dockerfile # Docker image
+├── railway.toml # Railway config
 └── README.md
 ```
 
-## Деплой
+## Deploy
 
 ### Railway
 
-1. Установите [Railway CLI](https://docs.railway.app/develop/cli):
+1. Install the [Railway CLI](https://docs.railway.app/develop/cli):
 ```bash
 npm install -g @railway/cli
 ```
 
-2. Войдите в аккаунт:
+2. Log in Account:
 ```bash
 railway login
 ```
 
-3. Инициализируйте проект:
+3. Initialize the project:
 ```bash
 railway init
 ```
 
-4. Добавьте PostgreSQL:
+4. Add PostgreSQL:
 ```bash
 railway add postgresql
 ```
 
-5. Установите переменные окружения:
+5. Set environment variables:
 ```bash
 railway variables set BOT_TOKEN=your_bot_token
 ```
 
-6. Деплой:
+6. Deploy:
 ```bash
 railway up
 ```
@@ -183,90 +183,46 @@ railway up
 ### Docker
 
 ```bash
-# Сборка образа
+# Build the image
 docker build -t telegram-bot .
 
-# Запуск контейнера
+# Starting a container
 docker run -d \
-  -e BOT_TOKEN=your_token \
-  -e DATABASE_URL=postgres://... \
-  --name telegram-bot \
-  telegram-bot
+-e BOT_TOKEN=your_token \
+-e DATABASE_URL=postgres://... \
+--name telegram-bot \
+telegram-bot
 ```
 
-## Разработка
+## Development
 
-### Запуск с логированием
+### Running with logging
 ```bash
 RUST_LOG=debug cargo run
 ```
 
-### Форматирование кода
+### Code formatting
 ```bash
 cargo fmt
 ```
 
-### Линтинг
+### Linting
 ```bash
 cargo clippy
 ```
 
-### Тесты
+### Tests
 ```bash
 cargo test
 ```
 
-## Конфигурация
+## Configuration
 
-Все настройки задаются через переменные окружения (см. `.env.example`):
+All settings are set via environment variables (see `.env.example`):
 
-| Переменная | Описание | По умолчанию |
-|-----------|----------|--------------|
-| `BOT_TOKEN` | Токен Telegram бота | - |
-| `DATABASE_URL` | URL базы данных | - |
-| `ENVIRONMENT` | Окружение (development/production) | development |
-| `LOG_LEVEL` | Уровень логирования | info |
-| `DB_MAX_CONNECTIONS` | Макс. соединений с БД | 10 |
-
-## Система напоминаний
-
-Планировщик напоминаний работает на Tokio tasks:
-
-1. При запуске загружаются все pending напоминания
-2. Для каждого создается Tokio task с задержкой
-3. Background задача проверяет новые напоминания каждые 30 сек
-4. Поддерживает до ~10K одновременных напоминаний
-
-## Миграции базы данных
-
-Миграции находятся в `migrations/` и выполняются автоматически при запуске.
-
-Создание новой миграции:
-```bash
-sqlx migrate add <название>
-```
-
-Применение миграций:
-```bash
-sqlx migrate run
-```
-
-Откат последней миграции:
-```bash
-sqlx migrate revert
-```
-
-## Лицензия
-
-MIT
-
-## Автор
-
-Создано как production-ready стартап проект на Rust.
-
----
-
-**Полезные ссылки:**
-- [Teloxide Documentation](https://docs.rs/teloxide/)
-- [SQLx Documentation](https://docs.rs/sqlx/)
-- [Railway Docs](https://docs.railway.app/)
+| Variable | Description | Default |
+|-----------|-----------|---------------|
+| `BOT_TOKEN` | Telegram bot token | - |
+| `DATABASE_URL` | Database URL | - |
+| `ENVIRONMENT` | Environment (development/production) | development |
+| `LOG_LEVEL` | Level

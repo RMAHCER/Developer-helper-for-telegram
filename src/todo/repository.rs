@@ -1,7 +1,7 @@
-// Todo repository - слой доступа к данным
+// Todo repository - data access layer
 //
-// Repository pattern: изолирует бизнес-логику от деталей работы с БД
-// Все SQL запросы находятся здесь
+// Repository pattern: isolates business logic from DB implementation details
+// All SQL queries are located here
 
 use crate::db::models::{NewTodo, Todo, UpdateTodo};
 use crate::error::{not_found, Result};
@@ -9,7 +9,7 @@ use crate::shared::types::DbId;
 use crate::todo::models::{TodoFilter, TodoSort};
 use sqlx::PgPool;
 
-/// Repository для работы с задачами
+/// Repository for working with tasks
 #[derive(Clone)]
 pub struct TodoRepository {
     pool: PgPool,
@@ -20,7 +20,7 @@ impl TodoRepository {
         Self { pool }
     }
 
-    /// Создать новую задачу
+    /// Create a new task
     pub async fn create(&self, new_todo: NewTodo) -> Result<Todo> {
         let todo = sqlx::query_as::<_, Todo>(
             r#"
@@ -40,7 +40,7 @@ impl TodoRepository {
         Ok(todo)
     }
 
-    /// Найти задачу по ID
+    /// Find task by ID
     pub async fn find_by_id(&self, id: DbId) -> Result<Todo> {
         let todo = sqlx::query_as::<_, Todo>("SELECT * FROM todos WHERE id = $1")
             .bind(id)
@@ -51,14 +51,14 @@ impl TodoRepository {
         Ok(todo)
     }
 
-    /// Найти все задачи пользователя
+    /// Find all user tasks
     pub async fn find_by_user(
         &self,
         user_id: DbId,
         filter: TodoFilter,
         sort: TodoSort,
     ) -> Result<Vec<Todo>> {
-        // БЕЗОПАСНОЕ построение запроса - используем только параметры
+        // SAFE query construction - use parameters only
         // ORDER BY безопасен т.к. использует enum (не пользовательский ввод)
         let order_by = match sort {
             TodoSort::CreatedAtAsc => "created_at ASC",
@@ -69,13 +69,13 @@ impl TodoRepository {
             TodoSort::TitleDesc => "title DESC",
         };
 
-        // ЗАЩИТА от DoS: ограничиваем количество возвращаемых записей
+        // DoS PROTECTION: limit number of returned records
         const MAX_TODOS: i64 = 1000;
 
-        // Используем разные запросы в зависимости от фильтров (безопасно)
+        // Use different queries depending on filters (безопасно)
         let todos = match (&filter.status, filter.priority, &filter.search) {
             (None, None, None) => {
-                // Без фильтров
+                // Without filters
                 sqlx::query_as::<_, Todo>(&format!(
                     "SELECT * FROM todos WHERE user_id = $1 ORDER BY {} LIMIT {}",
                     order_by, MAX_TODOS
@@ -85,7 +85,7 @@ impl TodoRepository {
                 .await?
             }
             (Some(status), None, None) => {
-                // Только статус
+                // Status only
                 sqlx::query_as::<_, Todo>(&format!(
                     "SELECT * FROM todos WHERE user_id = $1 AND status = $2 ORDER BY {}",
                     order_by
@@ -96,7 +96,7 @@ impl TodoRepository {
                 .await?
             }
             (None, Some(priority), None) => {
-                // Только приоритет
+                // Priority only
                 sqlx::query_as::<_, Todo>(&format!(
                     "SELECT * FROM todos WHERE user_id = $1 AND priority = $2 ORDER BY {}",
                     order_by
@@ -107,7 +107,7 @@ impl TodoRepository {
                 .await?
             }
             (None, None, Some(search)) => {
-                // Только поиск
+                // Search only
                 let search_pattern = format!("%{}%", search);
                 sqlx::query_as::<_, Todo>(&format!(
                     "SELECT * FROM todos WHERE user_id = $1 AND (title ILIKE $2 OR description ILIKE $2) ORDER BY {}",
@@ -176,9 +176,9 @@ impl TodoRepository {
         Ok(todos)
     }
 
-    /// Обновить задачу
+    /// Update task
     pub async fn update(&self, id: DbId, update: UpdateTodo) -> Result<Todo> {
-        // БЕЗОПАСНОЕ обновление - используем фиксированные запросы для каждой комбинации полей
+        // SAFE update - use fixed queries for each field combination
         if update.title.is_none()
             && update.description.is_none()
             && update.status.is_none()
@@ -221,7 +221,7 @@ impl TodoRepository {
                 .fetch_one(&self.pool)
                 .await?
             }
-            // Множественные обновления
+            // Multiple updates
             (Some(title), Some(desc), None, None) => {
                 sqlx::query_as::<_, Todo>(
                     "UPDATE todos SET title = $1, description = $2 WHERE id = $3 RETURNING *",
@@ -252,7 +252,7 @@ impl TodoRepository {
                 .fetch_one(&self.pool)
                 .await?
             }
-            // Обновление всех полей
+            // Update all fields
             (Some(title), Some(desc), Some(status), Some(priority)) => {
                 sqlx::query_as::<_, Todo>(
                     "UPDATE todos SET title = $1, description = $2, status = $3, priority = $4 WHERE id = $5 RETURNING *",
@@ -265,9 +265,9 @@ impl TodoRepository {
                 .fetch_one(&self.pool)
                 .await?
             }
-            // Для остальных комбинаций - обновляем все не-None поля
+            // Для остальных комбинаций - обновляем all не-None поля
             _ => {
-                // Fallback: обновляем только те поля, которые заданы
+                // Fallback: обновляем только те поля, которые заyesны
                 let mut sql = String::from("UPDATE todos SET ");
                 let mut updates = Vec::new();
 
@@ -302,7 +302,7 @@ impl TodoRepository {
         Ok(todo)
     }
 
-    /// Удалить задачу
+    /// Delete task
     pub async fn delete(&self, id: DbId) -> Result<()> {
         let result = sqlx::query("DELETE FROM todos WHERE id = $1")
             .bind(id)
@@ -317,7 +317,7 @@ impl TodoRepository {
         Ok(())
     }
 
-    /// Отметить задачу как выполненную
+    /// Mark task as completed
     pub async fn mark_completed(&self, id: DbId) -> Result<Todo> {
         let todo = sqlx::query_as::<_, Todo>(
             r#"
@@ -336,7 +336,7 @@ impl TodoRepository {
         Ok(todo)
     }
 
-    /// Получить статистику по задачам пользователя
+    /// Get user task statistics
     pub async fn get_user_stats(&self, user_id: DbId) -> Result<TodoStats> {
         let stats = sqlx::query_as::<_, TodoStats>(
             r#"
@@ -358,7 +358,7 @@ impl TodoRepository {
     }
 }
 
-/// Статистика по задачам
+/// Task statistics
 #[derive(Debug, Clone, sqlx::FromRow)]
 pub struct TodoStats {
     pub total: i64,

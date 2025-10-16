@@ -1,12 +1,12 @@
-// Shared utilities - общие утилитарные функции
+// Shared utilities - common utility functions
 
 use chrono::{DateTime, Duration, Utc};
 
-/// Парсинг относительного времени (например: "1h", "30m", "2d")
+/// Parse relative time (например: "1h", "30m", "2d")
 pub fn parse_relative_time(input: &str) -> Option<DateTime<Utc>> {
     let input = input.trim().to_lowercase();
 
-    // Разбираем на число и единицу времени
+    // Parse into number and time unit
     let (num_str, unit) = if input.ends_with('m') {
         (&input[..input.len() - 1], 'm')
     } else if input.ends_with('h') {
@@ -28,12 +28,12 @@ pub fn parse_relative_time(input: &str) -> Option<DateTime<Utc>> {
     }
 }
 
-/// Форматирование даты для пользователя
+/// Format date for user display
 pub fn format_datetime(dt: &DateTime<Utc>) -> String {
     dt.format("%Y-%m-%d %H:%M UTC").to_string()
 }
 
-/// Обрезание текста до определённой длины с добавлением "..."
+/// Truncate text to specified length with "..."
 pub fn truncate_text(text: &str, max_len: usize) -> String {
     if text.len() <= max_len {
         text.to_string()

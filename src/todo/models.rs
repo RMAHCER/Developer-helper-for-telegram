@@ -1,13 +1,13 @@
-// Todo models - модели и DTO для todo модуля
+// Todo models - models and DTOs for todo module
 //
-// Re-export моделей из db::models для удобства
-// Добавляем специфичные DTO для API
+// Re-export models from db::models for convenience
+// Add specific DTOs for API
 
 pub use crate::db::models::{NewTodo, Todo, UpdateTodo};
 use crate::shared::types::{Priority, TodoStatus};
 use serde::{Deserialize, Serialize};
 
-/// Фильтр для поиска задач
+/// Filter for searching tasks
 #[derive(Debug, Clone, Default)]
 pub struct TodoFilter {
     pub status: Option<TodoStatus>,
@@ -15,7 +15,7 @@ pub struct TodoFilter {
     pub search: Option<String>,
 }
 
-/// Опции сортировки задач
+/// Task sorting options
 #[derive(Debug, Clone, Copy)]
 pub enum TodoSort {
     CreatedAtAsc,
@@ -32,7 +32,7 @@ impl Default for TodoSort {
     }
 }
 
-/// DTO для вывода задачи пользователю
+/// DTO for displaying task to user
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TodoView {
     pub id: i32,

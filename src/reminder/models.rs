@@ -3,7 +3,7 @@
 pub use crate::db::models::{NewReminder, Reminder};
 use serde::{Deserialize, Serialize};
 
-/// DTO для отображения напоминания
+/// DTO for displaying reminder
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ReminderView {
     pub id: i32,

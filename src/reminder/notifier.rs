@@ -1,4 +1,4 @@
-// Reminder notifier - отправка уведомлений пользователям
+// Reminder notifier - sending notifications пользователям
 
 use crate::error::Result;
 use crate::reminder::models::Reminder;

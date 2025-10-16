@@ -15,7 +15,7 @@ impl ReminderRepository {
         Self { pool }
     }
 
-    /// Создать новое напоминание
+    /// Созyesть новое напоминание
     pub async fn create(&self, new_reminder: NewReminder) -> Result<Reminder> {
         let reminder = sqlx::query_as::<_, Reminder>(
             r#"
@@ -37,7 +37,7 @@ impl ReminderRepository {
         Ok(reminder)
     }
 
-    /// Найти напоминание по ID
+    /// Find reminder by ID
     pub async fn find_by_id(&self, id: DbId) -> Result<Reminder> {
         let reminder = sqlx::query_as::<_, Reminder>("SELECT * FROM reminders WHERE id = $1")
             .bind(id)
@@ -48,7 +48,7 @@ impl ReminderRepository {
         Ok(reminder)
     }
 
-    /// Получить все неотправленные напоминания, которые пора отправить
+    /// Get all unsent reminders that are due to be sent
     pub async fn get_pending_reminders(&self, before: Timestamp) -> Result<Vec<Reminder>> {
         let reminders = sqlx::query_as::<_, Reminder>(
             r#"
@@ -66,7 +66,7 @@ impl ReminderRepository {
         Ok(reminders)
     }
 
-    /// Отметить напоминание как отправленное
+    /// Mark reminder as sent
     pub async fn mark_as_sent(&self, id: DbId) -> Result<()> {
         sqlx::query(
             r#"
@@ -83,7 +83,7 @@ impl ReminderRepository {
         Ok(())
     }
 
-    /// Получить все напоминания пользователя
+    /// Get all user reminders
     pub async fn find_by_user(&self, user_id: DbId) -> Result<Vec<Reminder>> {
         let reminders = sqlx::query_as::<_, Reminder>(
             r#"
@@ -99,7 +99,7 @@ impl ReminderRepository {
         Ok(reminders)
     }
 
-    /// Удалить напоминание
+    /// Delete reminder
     pub async fn delete(&self, id: DbId) -> Result<()> {
         let result = sqlx::query("DELETE FROM reminders WHERE id = $1")
             .bind(id)

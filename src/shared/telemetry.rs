@@ -1,14 +1,14 @@
-// Telemetry - настройка логирования и мониторинга
+// Telemetry - logging and monitoring setup
 use tracing_subscriber::EnvFilter;
 
-/// Инициализация системы логирования
+/// Initialize logging system
 pub fn init_telemetry() -> Result<(), String> {
-    // Создаём фильтр из переменной окружения RUST_LOG
+    // Create filter from RUST_LOG environment variable
     let env_filter = EnvFilter::try_from_default_env()
         .or_else(|_| EnvFilter::try_new("info"))
         .expect("Failed to initialize logging filter");
 
-    // Инициализируем subscriber с pretty форматом
+    // Initialize subscriber with pretty format
     tracing_subscriber::fmt()
         .with_env_filter(env_filter)
         .with_target(false)

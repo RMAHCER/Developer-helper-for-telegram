@@ -44,16 +44,16 @@ pub enum Command {
     #[command(description = "Показать справку")]
     Help,
 
-    #[command(description = "Добавить задачу: /addtodo <текст>")]
+    #[command(description = "Добавить заyesчу: /addtodo <текст>")]
     AddTodo(String),
 
-    #[command(description = "Показать список задач")]
+    #[command(description = "Показать список заyesч")]
     ListTodos,
 
-    #[command(description = "Отметить задачу выполненной: /completetodo <id>")]
+    #[command(description = "Отметить заyesчу выполненной: /completetodo <id>")]
     CompleteTodo(i32),
 
-    #[command(description = "Удалить задачу: /deletetodo <id>")]
+    #[command(description = "Delete task: /deletetodo <id>")]
     DeleteTodo(i32),
 
     #[command(description = "Установить напоминание: /remind <время> <текст>")]

@@ -1,15 +1,15 @@
-// Shared types - общие типы данных
+// Shared types - common data types
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
-/// ID пользователя Telegram
+/// Telegram user ID
 pub type TelegramUserId = i64;
 
-/// ID записи в базе данных
+/// Database record ID
 pub type DbId = i32;
 
-/// Статус задачи
+/// Task status
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, sqlx::Type)]
 #[sqlx(type_name = "VARCHAR", rename_all = "lowercase")]
 pub enum TodoStatus {
@@ -47,13 +47,13 @@ impl std::str::FromStr for TodoStatus {
     }
 }
 
-/// Приоритет задачи (1 - highest, 5 - lowest)
+/// Task priority (1 - highest, 5 - lowest)
 pub type Priority = i32;
 
-/// Временная метка
+/// Timestamp
 pub type Timestamp = DateTime<Utc>;
 
-/// Статус конвертации файла
+/// File conversion status
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, sqlx::Type)]
 #[sqlx(type_name = "VARCHAR", rename_all = "lowercase")]
 pub enum ConversionStatus {
@@ -74,7 +74,7 @@ impl ToString for ConversionStatus {
     }
 }
 
-/// Паттерн повторения напоминания
+/// Reminder recurrence pattern
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum RecurrencePattern {
     Daily,

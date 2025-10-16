@@ -1,4 +1,4 @@
-// Public API библиотеки
+// Public API of the library
 pub mod bot;
 pub mod todo;
 pub mod converter;

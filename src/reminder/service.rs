@@ -18,7 +18,7 @@ impl ReminderService {
         Self { repo }
     }
 
-    /// Создать напоминание
+    /// Create reminder
     pub async fn create_reminder(
         &self,
         user_id: DbId,
@@ -26,7 +26,7 @@ impl ReminderService {
         time_input: &str,
         message: Option<String>,
     ) -> Result<Reminder> {
-        // Парсим время
+        // Parse time
         let remind_at = parse_relative_time(time_input)
             .ok_or_else(|| validation_error("Invalid time format. Use: 30m, 2h, 1d"))?;
 
@@ -34,7 +34,7 @@ impl ReminderService {
             return Err(validation_error("Reminder time must be in the future"));
         }
 
-        // Валидация сообщения
+        // Validation сообщения
         if let Some(ref msg) = message {
             if msg.len() > 500 {
                 return Err(validation_error("Message is too long (max 500 chars)"));
@@ -53,22 +53,22 @@ impl ReminderService {
         self.repo.create(new_reminder).await
     }
 
-    /// Получить напоминания пользователя
+    /// Get user reminders
     pub async fn get_user_reminders(&self, user_id: DbId) -> Result<Vec<Reminder>> {
         self.repo.find_by_user(user_id).await
     }
 
-    /// Удалить напоминание
+    /// Delete reminder
     pub async fn delete_reminder(&self, id: DbId) -> Result<()> {
         self.repo.delete(id).await
     }
 
-    /// Получить pending напоминания для планировщика
+    /// Get pending reminders for scheduler
     pub async fn get_pending_reminders(&self) -> Result<Vec<Reminder>> {
         self.repo.get_pending_reminders(Utc::now()).await
     }
 
-    /// Отметить напоминание как отправленное
+    /// Mark reminder as sent
     pub async fn mark_sent(&self, id: DbId) -> Result<()> {
         self.repo.mark_as_sent(id).await
     }

@@ -1,4 +1,4 @@
-// Main entry point для Telegram бота
+// Main entry point for Telegram bot
 use anyhow::Result;
 use telegram_multitool_bot::{
     config::Config,
@@ -10,28 +10,28 @@ use teloxide::prelude::*;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    // Инициализация логирования
+    // Initialize logging
     telemetry::init_telemetry().map_err(|e| anyhow::anyhow!(e))?;
     tracing::info!("🚀 Starting Telegram Multitool Bot...");
 
-    // Загрузка конфигурации из .env
+    // Load configuration from .env
     dotenv::dotenv().ok();
     let config = Config::from_env()?;
     tracing::info!("✅ Configuration loaded");
 
-    // Создание пула подключений к базе данных
+    // Create database connection pool
     let db_pool = create_pool(&config.database).await?;
     tracing::info!("✅ Database pool created");
 
-    // Запуск миграций
+    // Run migrations
     telegram_multitool_bot::db::migrations::run_migrations(&db_pool).await?;
     tracing::info!("✅ Database migrations completed");
 
-    // Инициализация бота
+    // Initialize bot
     let bot = Bot::new(&config.telegram.bot_token);
     tracing::info!("✅ Bot initialized");
 
-    // Запуск планировщика напоминаний (фоновая задача)
+    // Start reminder scheduler (background task)
     let scheduler = ReminderScheduler::new(db_pool.clone(), bot.clone());
     let scheduler_handle = tokio::spawn(async move {
         if let Err(e) = scheduler.run().await {
@@ -40,13 +40,13 @@ async fn main() -> Result<()> {
     });
     tracing::info!("✅ Reminder scheduler started");
 
-    // Создание диспетчера команд
+    // Create command dispatcher
     let handler = telegram_multitool_bot::bot::handlers::schema();
 
     tracing::info!("✅ Starting bot dispatcher...");
     tracing::info!("Bot is ready to receive messages!");
 
-    // Запуск бота с long polling
+    // Start bot with long polling
     Dispatcher::builder(bot, handler)
         .dependencies(dptree::deps![db_pool])
         .enable_ctrlc_handler()
@@ -54,7 +54,7 @@ async fn main() -> Result<()> {
         .dispatch()
         .await;
 
-    // Ожидание завершения фоновых задач
+    // Wait for background tasks to complete
     scheduler_handle.await?;
 
     tracing::info!("👋 Bot stopped");

@@ -1,13 +1,13 @@
-// Todo handlers - обработчики команд для todo модуля
+// Todo handlers - command handlers for todo module
 //
-// Handlers связывают Telegram команды с business logic
-// Форматируют ответы для пользователя
+// Handlers connect Telegram commands with business logic
+// Format responses for user
 
 use crate::error::Result;
 use crate::shared::types::TodoStatus;
 use crate::todo::models::TodoView;
 
-/// Форматировать список задач для вывода пользователю
+/// Format task list for user display
 pub fn format_todo_list(todos: Vec<TodoView>) -> String {
     if todos.is_empty() {
         return "📝 You have no tasks yet.\n\nUse /newtodo to create one!".to_string();
@@ -42,7 +42,7 @@ pub fn format_todo_list(todos: Vec<TodoView>) -> String {
     output
 }
 
-/// Форматировать детали задачи
+/// Format task details
 pub fn format_todo_details(todo: &TodoView) -> String {
     let mut output = format!(
         "{} {} *Task #{}*\n\n",
@@ -69,7 +69,7 @@ pub fn format_todo_details(todo: &TodoView) -> String {
     output
 }
 
-/// Эскейпинг специальных символов Markdown
+/// Escape special characters for Markdown
 fn escape_markdown(text: &str) -> String {
     text.replace('_', "\\_")
         .replace('*', "\\*")
@@ -77,7 +77,7 @@ fn escape_markdown(text: &str) -> String {
         .replace('`', "\\`")
 }
 
-/// Парсинг строки статуса в enum
+/// Parse status string into enum
 pub fn parse_status(status_str: &str) -> Result<TodoStatus> {
     status_str.parse()
 }

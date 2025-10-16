@@ -1,96 +1,96 @@
-// Configuration - управление конфигурацией приложения
+// Configuration - application configuration management
 //
-// Конфигурация загружается из:
-// 1. Файла config/default.toml (defaults)
-// 2. Переменных окружения (.env файл)
-// 3. Переменных окружения системы (приоритет)
+// Configuration is loaded from:
+// 1. config/default.toml file (defaults)
+// 2. Environment variables (.env file)
+// 3. System environment variables (priority)
 
 use crate::error::{AppError, Result};
 use serde::{Deserialize, Serialize};
 use std::env;
 
-/// Основная конфигурация приложения
+/// Main application configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Config {
-    /// Конфигурация Telegram бота
+    /// Telegram bot configuration
     pub telegram: TelegramConfig,
 
-    /// Конфигурация базы данных
+    /// Database configuration
     pub database: DatabaseConfig,
 
-    /// Конфигурация приложения
+    /// Application configuration
     pub app: AppConfig,
 
-    /// Конфигурация логирования
+    /// Logging configuration
     pub logging: LoggingConfig,
 }
 
-/// Конфигурация Telegram бота
+/// Telegram bot configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TelegramConfig {
-    /// Токен бота от @BotFather
+    /// Bot token from @BotFather
     pub bot_token: String,
 
-    /// Максимальное количество одновременных обработчиков
+    /// Maximum number of concurrent handlers
     #[serde(default = "default_max_handlers")]
     pub max_handlers: usize,
 }
 
-/// Конфигурация базы данных
+/// Database configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DatabaseConfig {
-    /// URL подключения к БД (например: postgres://user:pass@localhost/db)
+    /// Database connection URL (example: postgres://user:pass@localhost/db)
     pub url: String,
 
-    /// Максимальное количество соединений в пуле
+    /// Maximum number of connections in the pool
     #[serde(default = "default_max_connections")]
     pub max_connections: u32,
 
-    /// Минимальное количество соединений в пуле
+    /// Minimum number of connections in the pool
     #[serde(default = "default_min_connections")]
     pub min_connections: u32,
 
-    /// Автоматический запуск миграций при старте
+    /// Automatic migration execution on startup
     #[serde(default = "default_auto_migrate")]
     pub auto_migrate: bool,
 }
 
-/// Конфигурация приложения
+/// Application configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AppConfig {
-    /// Название приложения
+    /// Application name
     #[serde(default = "default_app_name")]
     pub name: String,
 
-    /// Окружение (development, production)
+    /// Environment (development, production)
     #[serde(default = "default_environment")]
     pub environment: String,
 
-    /// Порт для health checks (опционально)
+    /// Port for health checks (optional)
     #[serde(default)]
     pub port: Option<u16>,
 
-    /// Директория для временных файлов
+    /// Directory for temporary files
     #[serde(default = "default_temp_dir")]
     pub temp_dir: String,
 
-    /// Директория для конвертированных файлов
+    /// Directory for converted files
     #[serde(default = "default_output_dir")]
     pub output_dir: String,
 
-    /// Максимальный размер загружаемого файла (в байтах)
+    /// Maximum uploaded file size (in bytes)
     #[serde(default = "default_max_file_size")]
     pub max_file_size: usize,
 }
 
-/// Конфигурация логирования
+/// Logging configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LoggingConfig {
-    /// Уровень логирования (trace, debug, info, warn, error)
+    /// Logging level (trace, debug, info, warn, error)
     #[serde(default = "default_log_level")]
     pub level: String,
 
-    /// Формат логов (json, pretty)
+    /// Log format (json, pretty)
     #[serde(default = "default_log_format")]
     pub format: String,
 }
@@ -109,9 +109,9 @@ fn default_log_level() -> String { "info".to_string() }
 fn default_log_format() -> String { "pretty".to_string() }
 
 impl Config {
-    /// Загрузить конфигурацию из переменных окружения
+    /// Load configuration from environment variables
     pub fn from_env() -> Result<Self> {
-        // Загружаем .env файл (если есть)
+        // Load .env file (if exists)
         dotenv::dotenv().ok();
 
         let telegram = TelegramConfig {
@@ -165,12 +165,12 @@ impl Config {
         })
     }
 
-    /// Проверка, что мы в production окружении
+    /// Check if we are in production environment
     pub fn is_production(&self) -> bool {
         self.app.environment == "production"
     }
 
-    /// Проверка, что мы в development окружении
+    /// Check if we are in development environment
     pub fn is_development(&self) -> bool {
         self.app.environment == "development"
     }

@@ -1,35 +1,35 @@
-// Клавиатуры и inline-кнопки для бота
+// Keyboards and inline buttons for bot
 use teloxide::types::{InlineKeyboardButton, InlineKeyboardMarkup, KeyboardButton, KeyboardMarkup};
 
-/// Главное меню бота
+/// Main bot menu
 pub fn main_menu() -> KeyboardMarkup {
     KeyboardMarkup::new(vec![
         vec![
-            KeyboardButton::new("📝 Задачи"),
-            KeyboardButton::new("⏰ Напоминания"),
+            KeyboardButton::new("📝 Tasks"),
+            KeyboardButton::new("⏰ Reminders"),
         ],
         vec![
-            KeyboardButton::new("📄 Конвертировать файл"),
-            KeyboardButton::new("❓ Помощь"),
+            KeyboardButton::new("📄 Convert File"),
+            KeyboardButton::new("❓ Help"),
         ],
     ])
     .resize_keyboard(true)
 }
 
-/// Действия для конкретной задачи
+/// Actions for specific task
 pub fn todo_actions(todo_id: i32) -> InlineKeyboardMarkup {
     InlineKeyboardMarkup::new(vec![
         vec![
-            InlineKeyboardButton::callback("✅ Выполнено", format!("complete_{}", todo_id)),
-            InlineKeyboardButton::callback("❌ Удалить", format!("delete_{}", todo_id)),
+            InlineKeyboardButton::callback("✅ Complete", format!("complete_{}", todo_id)),
+            InlineKeyboardButton::callback("❌ Delete", format!("delete_{}", todo_id)),
         ],
         vec![
-            InlineKeyboardButton::callback("⏰ Напомнить", format!("remind_{}", todo_id)),
+            InlineKeyboardButton::callback("⏰ Remind", format!("remind_{}", todo_id)),
         ],
     ])
 }
 
-/// Меню конвертации файлов
+/// File conversion menu
 pub fn conversion_menu(file_type: &str) -> InlineKeyboardMarkup {
     match file_type {
         "image" => InlineKeyboardMarkup::new(vec![
@@ -39,7 +39,7 @@ pub fn conversion_menu(file_type: &str) -> InlineKeyboardMarkup {
             ],
             vec![
                 InlineKeyboardButton::callback("→ WebP", "convert_webp"),
-                InlineKeyboardButton::callback("🔄 Сжать", "compress"),
+                InlineKeyboardButton::callback("🔄 Compress", "compress"),
             ],
         ]),
         "document" => InlineKeyboardMarkup::new(vec![
@@ -51,12 +51,12 @@ pub fn conversion_menu(file_type: &str) -> InlineKeyboardMarkup {
     }
 }
 
-/// Кнопки подтверждения
+/// Confirmation buttons
 pub fn confirmation_keyboard(action: &str, id: i32) -> InlineKeyboardMarkup {
     InlineKeyboardMarkup::new(vec![
         vec![
-            InlineKeyboardButton::callback("✅ Да", format!("{}_{}_yes", action, id)),
-            InlineKeyboardButton::callback("❌ Нет", format!("{}_{}_no", action, id)),
+            InlineKeyboardButton::callback("✅ Yes", format!("{}_{}_yes", action, id)),
+            InlineKeyboardButton::callback("❌ No", format!("{}_{}_no", action, id)),
         ],
     ])
 }

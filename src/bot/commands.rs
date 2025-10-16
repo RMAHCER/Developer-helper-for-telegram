@@ -1,4 +1,4 @@
-// Реализация команд бота
+// Bot command implementations
 use teloxide::prelude::*;
 use teloxide::types::ParseMode;
 use sqlx::PgPool;
@@ -13,12 +13,12 @@ use crate::{
 
 type HandlerResult = Result<(), Box<dyn std::error::Error + Send + Sync>>;
 
-/// /start - приветствие и регистрация пользователя
+/// /start - welcome and register user
 pub async fn start(bot: Bot, msg: Message, pool: PgPool) -> HandlerResult {
-    // БЕЗОПАСНО: проверяем наличие пользователя
+    // SAFE: check user exists
     let user = msg.from().ok_or("No user in message")?;
 
-    // Регистрируем пользователя в БД (если еще не зарегистрирован)
+    // Register user in DB (if not already registered)
     sqlx::query(
         r#"
         INSERT INTO users (telegram_id, username, first_name)
@@ -34,14 +34,14 @@ pub async fn start(bot: Bot, msg: Message, pool: PgPool) -> HandlerResult {
     .await?;
 
     let welcome_text = format!(
-        "👋 Привет, {}!\n\n\
-        Я — мультифункциональный бот-помощник.\n\n\
-        🎯 **Что я умею:**\n\
-        ✅ Управление задачами (ToDo)\n\
-        ⏰ Напоминания\n\
-        📄 Конвертация файлов\n\n\
-        Используй /help, чтобы увидеть все команды.",
-        user.first_name
+        "👋 Hello, {}\\!\n\n\
+        I am a multifunctional assistant bot\\.\n\n\
+        🎯 **What I can do:**\n\
+        ✅ Task management \\(ToDo\\)\n\
+        ⏰ Reminders\n\
+        📄 File conversion\n\n\
+        Use /help to see all commands\\.",
+        user.first_name.replace("!", "\\!")
     );
 
     bot.send_message(msg.chat.id, welcome_text)
@@ -52,26 +52,26 @@ pub async fn start(bot: Bot, msg: Message, pool: PgPool) -> HandlerResult {
     Ok(())
 }
 
-/// /help - справка по командам
+/// /help - command reference
 pub async fn help(bot: Bot, msg: Message) -> HandlerResult {
-    let help_text = r#"📚 Доступные команды:
+    let help_text = r#"📚 Available commands:
 
-Управление задачами:
-/addtodo <текст> \- добавить новую задачу
-/listtodos \- показать все задачи
-/completetodo <id> \- отметить задачу выполненной
-/deletetodo <id> \- удалить задачу
+Task Management:
+/addtodo <text> \- add new task
+/listtodos \- show all tasks
+/completetodo <id> \- mark task as completed
+/deletetodo <id> \- delete task
 
-Напоминания:
-/remind <время> <текст> \- установить напоминание
-  Пример: /remind 15m Проверить почту
-  Форматы: 5m \(минуты\), 2h \(часы\), 1d \(дни\)
-/listreminders \- показать активные напоминания
-/cancelreminder <id> \- отменить напоминание
+Reminders:
+/remind <time> <text> \- set reminder
+  Example: /remind 15m Check email
+  Formats: 5m \(minutes\), 2h \(hours\), 1d \(days\)
+/listreminders \- show active reminders
+/cancelreminder <id> \- cancel reminder
 
-Общее:
-/start \- начать работу
-/help \- эта справка"#;
+General:
+/start \- start bot
+/help \- this help message"#;
 
     bot.send_message(msg.chat.id, help_text)
         .parse_mode(ParseMode::MarkdownV2)
@@ -80,24 +80,24 @@ pub async fn help(bot: Bot, msg: Message) -> HandlerResult {
     Ok(())
 }
 
-/// /addtodo - добавить новую задачу
+/// /addtodo - add new task
 pub async fn add_todo(bot: Bot, msg: Message, pool: PgPool, text: String) -> HandlerResult {
-    // ВАЛИДАЦИЯ: ограничиваем длину текста (защита от DoS)
+    // VALIDATION: limit text length (DoS protection)
     if text.is_empty() {
-        bot.send_message(msg.chat.id, "❌ Текст задачи не может быть пустым!")
+        bot.send_message(msg.chat.id, "❌ Task text cannot be empty!")
             .await?;
         return Ok(());
     }
 
     if text.len() > 1000 {
-        bot.send_message(msg.chat.id, "❌ Текст задачи слишком длинный (макс. 1000 символов)!")
+        bot.send_message(msg.chat.id, "❌ Task text is too long (max 1000 characters)!")
             .await?;
         return Ok(());
     }
 
     let user_id = msg.from().ok_or("No user in message")?.id.0 as i64;
 
-    // Получаем ID пользователя из БД
+    // Get user ID from DB
     let user: crate::db::models::User = sqlx::query_as(
         "SELECT * FROM users WHERE telegram_id = $1",
     )
@@ -105,14 +105,14 @@ pub async fn add_todo(bot: Bot, msg: Message, pool: PgPool, text: String) -> Han
     .fetch_one(&pool)
     .await?;
 
-    // Создаем задачу
+    // Create task
     let todo_repo = TodoRepository::new(pool);
     let todo_service = TodoService::new(todo_repo);
     let todo = todo_service.create_todo(user.id, text, None, Some(3)).await?;
 
     bot.send_message(
         msg.chat.id,
-        format!("✅ Задача добавлена\\!\n\n📝 {}\n🆔 ID: {}",
+        format!("✅ Task added\\!\n\n📝 {}\n🆔 ID: {}",
             todo.title.replace("-", "\\-").replace(".", "\\.").replace("!", "\\!"),
             todo.id
         ),
@@ -124,7 +124,7 @@ pub async fn add_todo(bot: Bot, msg: Message, pool: PgPool, text: String) -> Han
     Ok(())
 }
 
-/// /listtodos - показать все задачи
+/// /listtodos - show all tasks
 pub async fn list_todos(bot: Bot, msg: Message, pool: PgPool) -> HandlerResult {
     let user_id = msg.from().ok_or("No user in message")?.id.0 as i64;
 
@@ -140,12 +140,13 @@ pub async fn list_todos(bot: Bot, msg: Message, pool: PgPool) -> HandlerResult {
     let todos = todo_service.list_user_todos(user.id, None, None).await?;
 
     if todos.is_empty() {
-        bot.send_message(msg.chat.id, "📋 У вас пока нет задач.\nДобавьте первую: /addtodo <текст>")
+        bot.send_message(msg.chat.id, "📋 You have no tasks yet\\.\nAdd your first task: /addtodo <text>")
+            .parse_mode(ParseMode::MarkdownV2)
             .await?;
         return Ok(());
     }
 
-    let mut text = "📋 *Ваши задачи:*\n\n".to_string();
+    let mut text = "📋 *Your tasks:*\n\n".to_string();
 
     for todo in todos {
         let status_icon = match todo.status.as_str() {
@@ -170,7 +171,7 @@ pub async fn list_todos(bot: Bot, msg: Message, pool: PgPool) -> HandlerResult {
     Ok(())
 }
 
-/// /completetodo - отметить задачу выполненной
+/// /completetodo - mark task as completed
 pub async fn complete_todo(bot: Bot, msg: Message, pool: PgPool, id: i32) -> HandlerResult {
     let user_id = msg.from().ok_or("No user in message")?.id.0 as i64;
 
@@ -185,24 +186,24 @@ pub async fn complete_todo(bot: Bot, msg: Message, pool: PgPool, id: i32) -> Han
     let todo_service = TodoService::new(todo_repo);
     let todo = todo_service.get_todo(id).await?;
 
-    // Проверяем владельца
+    // Check ownership
     if todo.user_id != user.id {
-        bot.send_message(msg.chat.id, "❌ Это не ваша задача!")
+        bot.send_message(msg.chat.id, "❌ This is not your task!")
             .await?;
         return Ok(());
     }
 
-    // Обновляем статус через репозиторий напрямую
+    // Update status via repository directly
     let repo2 = TodoRepository::new(pool);
     repo2.mark_completed(id).await?;
 
-    bot.send_message(msg.chat.id, format!("✅ Задача #{} отмечена как выполненная!", id))
+    bot.send_message(msg.chat.id, format!("✅ Task #{} marked as completed!", id))
         .await?;
 
     Ok(())
 }
 
-/// /deletetodo - удалить задачу
+/// /deletetodo - delete task
 pub async fn delete_todo(bot: Bot, msg: Message, pool: PgPool, id: i32) -> HandlerResult {
     let user_id = msg.from().ok_or("No user in message")?.id.0 as i64;
 
@@ -218,28 +219,28 @@ pub async fn delete_todo(bot: Bot, msg: Message, pool: PgPool, id: i32) -> Handl
     let todo = todo_service.get_todo(id).await?;
 
     if todo.user_id != user.id {
-        bot.send_message(msg.chat.id, "❌ Это не ваша задача!")
+        bot.send_message(msg.chat.id, "❌ This is not your task!")
             .await?;
         return Ok(());
     }
 
     todo_service.delete_todo(id).await?;
 
-    bot.send_message(msg.chat.id, format!("🗑 Задача #{} удалена!", id))
+    bot.send_message(msg.chat.id, format!("🗑 Task #{} deleted!", id))
         .await?;
 
     Ok(())
 }
 
-/// /remind - установить напоминание
+/// /remind - set reminder
 pub async fn set_reminder(bot: Bot, msg: Message, pool: PgPool, text: String) -> HandlerResult {
-    // Парсим формат: "15m Проверить почту" или "2h Встреча"
+    // Parse format: "15m Check email" or "2h Meeting"
     let parts: Vec<&str> = text.splitn(2, ' ').collect();
 
     if parts.len() < 2 {
         bot.send_message(
             msg.chat.id,
-            "❌ Неверный формат!\n\nИспользуйте: /remind <время> <текст>\nПример: /remind 15m Проверить почту",
+            "❌ Invalid format!\n\nUse: /remind <time> <text>\nExample: /remind 15m Check email",
         )
         .await?;
         return Ok(());
@@ -248,14 +249,14 @@ pub async fn set_reminder(bot: Bot, msg: Message, pool: PgPool, text: String) ->
     let time_str = parts[0];
     let reminder_text = parts[1];
 
-    // ВАЛИДАЦИЯ: ограничиваем длину текста напоминания
+    // VALIDATION: limit reminder text length
     if reminder_text.len() > 500 {
-        bot.send_message(msg.chat.id, "❌ Текст напоминания слишком длинный (макс. 500 символов)!")
+        bot.send_message(msg.chat.id, "❌ Reminder text is too long (max 500 characters)!")
             .await?;
         return Ok(());
     }
 
-    // Парсим время
+    // Parse time
     let duration = parse_duration(time_str)?;
     let _remind_time = chrono::Utc::now() + duration;
 
@@ -276,7 +277,7 @@ pub async fn set_reminder(bot: Bot, msg: Message, pool: PgPool, text: String) ->
     bot.send_message(
         msg.chat.id,
         format!(
-            "⏰ Напоминание установлено!\n\n📝 {}\n🕐 Напомню через {}\n🆔 ID: {}",
+            "⏰ Reminder set!\n\n📝 {}\n🕐 Will remind in {}\n🆔 ID: {}",
             reminder_text, time_str, reminder.id
         ),
     )
@@ -285,7 +286,7 @@ pub async fn set_reminder(bot: Bot, msg: Message, pool: PgPool, text: String) ->
     Ok(())
 }
 
-/// /listreminders - показать активные напоминания
+/// /listreminders - show active reminders
 pub async fn list_reminders(bot: Bot, msg: Message, pool: PgPool) -> HandlerResult {
     let user_id = msg.from().ok_or("No user in message")?.id.0 as i64;
 
@@ -300,18 +301,18 @@ pub async fn list_reminders(bot: Bot, msg: Message, pool: PgPool) -> HandlerResu
     let reminders = reminder_repo.find_by_user(user.id).await?;
 
     if reminders.is_empty() {
-        bot.send_message(msg.chat.id, "⏰ У вас нет активных напоминаний.")
+        bot.send_message(msg.chat.id, "⏰ You have no active reminders.")
             .await?;
         return Ok(());
     }
 
-    let mut text = "⏰ *Активные напоминания:*\n\n".to_string();
+    let mut text = "⏰ *Active reminders:*\n\n".to_string();
 
     for reminder in reminders {
         text.push_str(&format!(
             "🆔 \\#{} \\- {}\n🕐 {}\n\n",
             reminder.id,
-            reminder.message.as_deref().unwrap_or("Без текста").replace("-", "\\-").replace(".", "\\."),
+            reminder.message.as_deref().unwrap_or("No text").replace("-", "\\-").replace(".", "\\."),
             reminder.remind_at.format("%d\\.%m\\.%Y %H:%M")
         ));
     }
@@ -323,7 +324,7 @@ pub async fn list_reminders(bot: Bot, msg: Message, pool: PgPool) -> HandlerResu
     Ok(())
 }
 
-/// /cancelreminder - отменить напоминание
+/// /cancelreminder - cancel reminder
 pub async fn cancel_reminder(bot: Bot, msg: Message, pool: PgPool, id: i32) -> HandlerResult {
     let user_id = msg.from().ok_or("No user in message")?.id.0 as i64;
 
@@ -338,7 +339,7 @@ pub async fn cancel_reminder(bot: Bot, msg: Message, pool: PgPool, id: i32) -> H
     let reminder = reminder_repo.find_by_id(id).await?;
 
     if reminder.user_id != user.id {
-        bot.send_message(msg.chat.id, "❌ Это не ваше напоминание!")
+        bot.send_message(msg.chat.id, "❌ This is not your reminder!")
             .await?;
         return Ok(());
     }
@@ -346,31 +347,31 @@ pub async fn cancel_reminder(bot: Bot, msg: Message, pool: PgPool, id: i32) -> H
     let repo2 = ReminderRepository::new(pool);
     repo2.delete(id).await?;
 
-    bot.send_message(msg.chat.id, format!("✅ Напоминание #{} отменено!", id))
+    bot.send_message(msg.chat.id, format!("✅ Reminder #{} cancelled!", id))
         .await?;
 
     Ok(())
 }
 
-/// Обработка произвольных сообщений
+/// Handle arbitrary messages
 pub async fn handle_message(bot: Bot, msg: Message) -> HandlerResult {
-    bot.send_message(msg.chat.id, "Используйте /help для просмотра доступных команд.")
+    bot.send_message(msg.chat.id, "Use /help to see available commands.")
         .await?;
     Ok(())
 }
 
-/// Обработка callback кнопок
+/// Handle callback buttons
 pub async fn handle_callback(bot: Bot, q: CallbackQuery) -> HandlerResult {
     if let Some(data) = &q.data {
         bot.answer_callback_query(&q.id).await?;
 
-        // Обработка callback данных
+        // Process callback data
         tracing::info!("Callback received: {}", data);
     }
     Ok(())
 }
 
-/// Парсинг длительности из строки (5m, 2h, 1d)
+/// Parse duration from string (5m, 2h, 1d)
 fn parse_duration(s: &str) -> Result<chrono::Duration, Box<dyn std::error::Error + Send + Sync>> {
     let len = s.len();
     if len < 2 {
@@ -379,7 +380,7 @@ fn parse_duration(s: &str) -> Result<chrono::Duration, Box<dyn std::error::Error
 
     let num: i64 = s[..len-1].parse()?;
 
-    // ВАЛИДАЦИЯ: защита от отрицательных и слишком больших значений
+    // VALIDATION: protect from negative and too large values
     if num <= 0 {
         return Err("Duration must be positive".into());
     }

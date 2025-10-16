@@ -1,7 +1,7 @@
-// Состояния диалога для FSM (Finite State Machine)
+// Dialog states for FSM (Finite State Machine)
 use serde::{Deserialize, Serialize};
 
-/// Состояния бота для диалогов
+/// Bot states for dialogs
 #[derive(Clone, Default, Debug, Serialize, Deserialize)]
 pub enum State {
     #[default]

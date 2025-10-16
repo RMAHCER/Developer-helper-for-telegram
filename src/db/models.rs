@@ -1,13 +1,13 @@
-// Database models - структуры данных для работы с БД
+// Database models - data structures for working with DB
 //
-// Модели соответствуют таблицам в базе данных
-// Используют derive(sqlx::FromRow) для автоматического маппинга
+// Models correspond to database tables
+// Use derive(sqlx::FromRow) for automatic mapping
 
 use crate::shared::types::{ConversionStatus, DbId, Priority, TelegramUserId, Timestamp, TodoStatus};
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
 
-/// Модель пользователя
+/// User model
 #[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow)]
 pub struct User {
     pub id: DbId,
@@ -19,7 +19,7 @@ pub struct User {
     pub last_active_at: Timestamp,
 }
 
-/// Данные для создания нового пользователя
+/// Data for creating a new user
 #[derive(Debug, Clone)]
 pub struct NewUser {
     pub telegram_id: TelegramUserId,
@@ -29,13 +29,13 @@ pub struct NewUser {
 }
 
 impl User {
-    /// Обновить время последней активности
+    /// Update last activity time
     pub fn touch(&mut self) {
         self.last_active_at = Utc::now();
     }
 }
 
-/// Модель задачи (Todo)
+/// Task model (Todo)
 #[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow)]
 pub struct Todo {
     pub id: DbId,
@@ -49,7 +49,7 @@ pub struct Todo {
     pub completed_at: Option<Timestamp>,
 }
 
-/// Данные для создания новой задачи
+/// Data for creating a new task
 #[derive(Debug, Clone)]
 pub struct NewTodo {
     pub user_id: DbId,
@@ -58,7 +58,7 @@ pub struct NewTodo {
     pub priority: Priority,
 }
 
-/// Данные для обновления задачи
+/// Data for updating a task
 #[derive(Debug, Clone, Default)]
 pub struct UpdateTodo {
     pub title: Option<String>,
@@ -68,12 +68,12 @@ pub struct UpdateTodo {
 }
 
 impl Todo {
-    /// Проверка, завершена ли задача
+    /// Check if task is completed
     pub fn is_completed(&self) -> bool {
         self.status == TodoStatus::Completed
     }
 
-    /// Получить эмодзи для статуса
+    /// Get emoji for status
     pub fn status_emoji(&self) -> &'static str {
         match self.status {
             TodoStatus::Pending => "⏳",
@@ -83,7 +83,7 @@ impl Todo {
         }
     }
 
-    /// Получить эмодзи для приоритета
+    /// Get emoji for priority
     pub fn priority_emoji(&self) -> &'static str {
         match self.priority {
             1 => "🔴", // Highest
@@ -96,7 +96,7 @@ impl Todo {
     }
 }
 
-/// Модель напоминания
+/// Reminder model
 #[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow)]
 pub struct Reminder {
     pub id: DbId,
@@ -111,7 +111,7 @@ pub struct Reminder {
     pub created_at: Timestamp,
 }
 
-/// Данные для создания нового напоминания
+/// Data for creating a new reminder
 #[derive(Debug, Clone)]
 pub struct NewReminder {
     pub user_id: DbId,
@@ -123,13 +123,13 @@ pub struct NewReminder {
 }
 
 impl Reminder {
-    /// Проверка, пора ли отправлять напоминание
+    /// Check if it's time to send the reminder
     pub fn should_send(&self) -> bool {
         !self.is_sent && self.remind_at <= Utc::now()
     }
 }
 
-/// Модель конвертации файла
+/// File conversion model
 #[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow)]
 pub struct FileConversion {
     pub id: DbId,
@@ -144,7 +144,7 @@ pub struct FileConversion {
     pub completed_at: Option<Timestamp>,
 }
 
-/// Данные для создания новой конвертации
+/// Data for creating a new conversion
 #[derive(Debug, Clone)]
 pub struct NewFileConversion {
     pub user_id: DbId,
@@ -154,7 +154,7 @@ pub struct NewFileConversion {
 }
 
 impl FileConversion {
-    /// Получить статус как enum
+    /// Get status as enum
     pub fn get_status(&self) -> ConversionStatus {
         match self.status.as_deref() {
             Some("pending") => ConversionStatus::Pending,

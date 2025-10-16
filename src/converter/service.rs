@@ -1,11 +1,11 @@
-// Converter service - упрощённая версия для обработки изображений
+// Converter service - simplified version for image processing
 
 use crate::error::{AppError, Result};
 use image::ImageFormat;
 use std::path::{Path, PathBuf};
 use tokio::fs;
 
-/// Сервис конвертации файлов
+/// File conversion service
 #[derive(Clone)]
 pub struct ConverterService {
     temp_dir: String,
@@ -17,7 +17,7 @@ impl ConverterService {
         Self { temp_dir, output_dir }
     }
 
-    /// Инициализация директорий
+    /// Initialize directories
     pub async fn init(&self) -> Result<()> {
         fs::create_dir_all(&self.temp_dir).await?;
         fs::create_dir_all(&self.output_dir).await?;
@@ -25,7 +25,7 @@ impl ConverterService {
         Ok(())
     }
 
-    /// Конвертировать изображение
+    /// Convert image
     pub async fn convert_image(
         &self,
         input_path: &Path,
@@ -33,12 +33,12 @@ impl ConverterService {
     ) -> Result<PathBuf> {
         let format = self.parse_image_format(target_format)?;
 
-        // Читаем изображение
+        // Read image
         let img = image::open(input_path).map_err(|e| {
             AppError::FileProcessing(format!("Failed to open image: {}", e))
         })?;
 
-        // Генерируем путь для output файла
+        // Generate path for output file
         let output_filename = format!(
             "{}.{}",
             uuid::Uuid::new_v4(),
@@ -46,7 +46,7 @@ impl ConverterService {
         );
         let output_path = Path::new(&self.output_dir).join(output_filename);
 
-        // Сохраняем в новом формате
+        // Save in new format
         img.save_with_format(&output_path, format).map_err(|e| {
             AppError::FileProcessing(format!("Failed to convert image: {}", e))
         })?;
@@ -55,7 +55,7 @@ impl ConverterService {
         Ok(output_path)
     }
 
-    /// Изменить размер изображения
+    /// Resize image
     pub async fn resize_image(
         &self,
         input_path: &Path,
@@ -79,7 +79,7 @@ impl ConverterService {
         Ok(output_path)
     }
 
-    /// Парсинг формата изображения
+    /// Parse image format
     fn parse_image_format(&self, format: &str) -> Result<ImageFormat> {
         match format.to_lowercase().as_str() {
             "png" => Ok(ImageFormat::Png),
@@ -94,7 +94,7 @@ impl ConverterService {
         }
     }
 
-    /// Очистка старых файлов
+    /// Cleanup old files
     pub async fn cleanup_old_files(&self, max_age_hours: u64) -> Result<()> {
         // TODO: Implement cleanup logic
         tracing::debug!("Cleanup old files (max age: {} hours)", max_age_hours);

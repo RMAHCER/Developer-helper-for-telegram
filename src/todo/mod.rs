@@ -1,4 +1,4 @@
-// ToDo module - управление задачами пользователей
+// ToDo module - управление заyesчами пользователей
 pub mod models;
 pub mod repository;
 pub mod service;

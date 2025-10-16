@@ -1,19 +1,19 @@
-// Database migrations - запуск SQL миграций
+// Database migrations - SQL migration execution
 //
-// SQLx поддерживает встроенные миграции через sqlx::migrate!()
-// Миграции запускаются автоматически при старте (если включено в конфиге)
+// SQLx supports embedded migrations via sqlx::migrate!()
+// Migrations run automatically on startup (if enabled in config)
 
 use crate::error::{AppError, Result};
 use sqlx::PgPool;
 
-/// Запуск миграций базы данных
+/// Run database migrations
 ///
-/// Миграции находятся в папке ./migrations/
-/// SQLx автоматически отслеживает, какие миграции уже применены
+/// Migrations are located in ./migrations/ folder
+/// SQLx automatically tracks which migrations have been applied
 pub async fn run_migrations(pool: &PgPool) -> Result<()> {
     tracing::info!("Running database migrations...");
 
-    // Встроенные миграции (компилируются в бинарник)
+    // Embedded migrations (compiled into binary)
     sqlx::migrate!("./migrations")
         .run(pool)
         .await
@@ -26,11 +26,11 @@ pub async fn run_migrations(pool: &PgPool) -> Result<()> {
     Ok(())
 }
 
-/// Проверка состояния миграций (для отладки)
+/// Check migration status (for debugging)
 pub async fn check_migrations(pool: &PgPool) -> Result<()> {
     tracing::debug!("Checking migration status...");
 
-    // Проверяем, что таблица _sqlx_migrations существует
+    // Check that _sqlx_migrations table exists
     let result = sqlx::query(
         "SELECT EXISTS (
             SELECT FROM information_schema.tables

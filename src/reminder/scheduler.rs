@@ -1,11 +1,11 @@
-// Reminder scheduler - планировщик напоминаний на Tokio tasks
+// Reminder scheduler - reminder scheduler using Tokio tasks
 //
-// Архитектура:
-// 1. Background task проверяет новые напоминания каждые 30 сек
-// 2. Для каждого pending напоминания создаётся Tokio task с delay
-// 3. Когда время приходит, task отправляет уведомление
+// Architecture:
+// 1. Background task checks for new reminders every 30 сек
+// 2. For each pending reminder, a Tokio task with delay is created
+// 3. When time comes, task sends notification
 //
-// Масштабируется до ~10K одновременных напоминаний
+// Scales up to ~10K concurrent reminders
 
 use crate::error::Result;
 use crate::reminder::notifier::ReminderNotifier;
@@ -18,11 +18,11 @@ use teloxide::Bot;
 use tokio::sync::Mutex;
 use tokio::time::{sleep, Duration};
 
-/// Планировщик напоминаний
+/// Reminder scheduler
 pub struct ReminderScheduler {
     pool: PgPool,
     bot: Bot,
-    scheduled_ids: Arc<Mutex<HashSet<i32>>>, // Отслеживаем запланированные напоминания
+    scheduled_ids: Arc<Mutex<HashSet<i32>>>, // Track scheduled reminders
 }
 
 impl ReminderScheduler {
@@ -34,7 +34,7 @@ impl ReminderScheduler {
         }
     }
 
-    /// Запустить планировщик (фоновая задача)
+    /// Start scheduler (background task)
     pub async fn run(self) -> Result<()> {
         tracing::info!("Starting reminder scheduler...");
 
@@ -43,12 +43,12 @@ impl ReminderScheduler {
                 tracing::error!("Scheduler error: {}", e);
             }
 
-            // Проверяем каждые 30 секунд
+            // Check every 30 секунд
             sleep(Duration::from_secs(30)).await;
         }
     }
 
-    /// Проверить и запланировать новые напоминания
+    /// Check and schedule new reminders
     async fn check_and_schedule(&self) -> Result<()> {
         let repo = ReminderRepository::new(self.pool.clone());
         let reminders = repo.get_pending_reminders(Utc::now()).await?;
@@ -56,17 +56,17 @@ impl ReminderScheduler {
         let mut scheduled = self.scheduled_ids.lock().await;
 
         for reminder in reminders {
-            // Пропускаем уже запланированные
+            // Skip already scheduled
             if scheduled.contains(&reminder.id) {
                 continue;
             }
 
-            // Проверяем, не пора ли отправлять уже сейчас
+            // Check if it's time to send now
             let now = Utc::now();
             if reminder.remind_at <= now {
                 self.send_reminder_now(reminder.clone()).await;
             } else {
-                // Планируем на будущее
+                // Schedule for future
                 self.schedule_reminder(reminder.clone()).await;
             }
 
@@ -75,7 +75,7 @@ impl ReminderScheduler {
 
         tracing::debug!("Scheduler check completed. Total scheduled: {}", scheduled.len());
 
-        // Очищаем старые IDs (опционально, чтобы не росло бесконечно)
+        // Clear old IDs (optional, to prevent infinite growth)
         if scheduled.len() > 100_000 {
             scheduled.clear();
             tracing::warn!("Cleared scheduled IDs cache (reached 100K)");
@@ -84,14 +84,14 @@ impl ReminderScheduler {
         Ok(())
     }
 
-    /// Запланировать напоминание на будущее
+    /// Schedule reminder for future
     async fn schedule_reminder(&self, reminder: crate::db::models::Reminder) {
         let bot = self.bot.clone();
         let pool = self.pool.clone();
         let scheduled_ids = Arc::clone(&self.scheduled_ids);
 
         tokio::spawn(async move {
-            // Вычисляем время ожидания
+            // Calculate wait time
             let now = Utc::now();
             let remind_at = reminder.remind_at;
             let delay = (remind_at - now).to_std().unwrap_or(Duration::from_secs(0));
@@ -103,11 +103,11 @@ impl ReminderScheduler {
                     delay.as_secs()
                 );
 
-                // Ждём до нужного времени
+                // Wait until needed time
                 sleep(delay).await;
             }
 
-            // Отправляем напоминание
+            // Send reminder
             let notifier = ReminderNotifier::new(bot);
             if let Err(e) = notifier.send_reminder(&reminder).await {
                 tracing::error!("Failed to send reminder {}: {}", reminder.id, e);
@@ -118,7 +118,7 @@ impl ReminderScheduler {
                     tracing::error!("Failed to mark reminder {} as sent: {}", reminder.id, e);
                 }
 
-                // Убираем из списка запланированных
+                // Remove from scheduled list
                 let mut scheduled = scheduled_ids.lock().await;
                 scheduled.remove(&reminder.id);
 
@@ -127,7 +127,7 @@ impl ReminderScheduler {
         });
     }
 
-    /// Отправить напоминание немедленно
+    /// Send reminder immediately
     async fn send_reminder_now(&self, reminder: crate::db::models::Reminder) {
         let bot = self.bot.clone();
         let pool = self.pool.clone();

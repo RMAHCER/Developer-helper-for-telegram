@@ -1,7 +1,7 @@
-// Todo service - бизнес-логика для работы с задачами
+// Todo service - business logic for working with tasks
 //
-// Service layer: содержит бизнес-правила и оркестрацию
-// Использует repository для доступа к данным
+// Service layer: contains business rules and orchestration
+// Uses repository for data access
 
 use crate::db::models::{NewTodo, UpdateTodo};
 use crate::error::{validation_error, Result};
@@ -9,7 +9,7 @@ use crate::shared::types::{DbId, Priority, TodoStatus};
 use crate::todo::models::{Todo, TodoFilter, TodoSort, TodoView};
 use crate::todo::repository::TodoRepository;
 
-/// Сервис для работы с задачами
+/// Service for working with tasks
 #[derive(Clone)]
 pub struct TodoService {
     repo: TodoRepository,
@@ -20,7 +20,7 @@ impl TodoService {
         Self { repo }
     }
 
-    /// Создать новую задачу с валидацией
+    /// Create a new task с валиyesцией
     pub async fn create_todo(
         &self,
         user_id: DbId,
@@ -28,7 +28,7 @@ impl TodoService {
         description: Option<String>,
         priority: Option<Priority>,
     ) -> Result<Todo> {
-        // Валидация
+        // Validation
         if title.trim().is_empty() {
             return Err(validation_error("Todo title cannot be empty"));
         }
@@ -60,12 +60,12 @@ impl TodoService {
         self.repo.create(new_todo).await
     }
 
-    /// Получить задачу по ID
+    /// Get task by ID
     pub async fn get_todo(&self, id: DbId) -> Result<Todo> {
         self.repo.find_by_id(id).await
     }
 
-    /// Получить все задачи пользователя с фильтрами
+    /// Get all user tasks with filters
     pub async fn list_user_todos(
         &self,
         user_id: DbId,
@@ -83,7 +83,7 @@ impl TodoService {
         Ok(todos.into_iter().map(TodoView::from).collect())
     }
 
-    /// Обновить задачу
+    /// Update task
     pub async fn update_todo(
         &self,
         id: DbId,
@@ -92,7 +92,7 @@ impl TodoService {
         status: Option<TodoStatus>,
         priority: Option<Priority>,
     ) -> Result<Todo> {
-        // Валидация
+        // Validation
         if let Some(ref t) = title {
             if t.trim().is_empty() {
                 return Err(validation_error("Title cannot be empty"));
@@ -124,17 +124,17 @@ impl TodoService {
         self.repo.update(id, update).await
     }
 
-    /// Удалить задачу
+    /// Delete task
     pub async fn delete_todo(&self, id: DbId) -> Result<()> {
         self.repo.delete(id).await
     }
 
-    /// Отметить задачу как выполненную
+    /// Mark task as completed
     pub async fn complete_todo(&self, id: DbId) -> Result<Todo> {
         self.repo.mark_completed(id).await
     }
 
-    /// Изменить статус задачи
+    /// Change task status
     pub async fn change_status(&self, id: DbId, status: TodoStatus) -> Result<Todo> {
         let update = UpdateTodo {
             status: Some(status),
@@ -144,7 +144,7 @@ impl TodoService {
         self.repo.update(id, update).await
     }
 
-    /// Получить статистику пользователя
+    /// Get user statistics
     pub async fn get_stats(&self, user_id: DbId) -> Result<String> {
         let stats = self.repo.get_user_stats(user_id).await?;
 
