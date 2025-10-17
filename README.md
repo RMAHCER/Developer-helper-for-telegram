@@ -66,7 +66,7 @@ The project follows a Clean Architecture with a clear separation of Layers:
 
 1. Clone the repository:
 ```bash
-git clone <repo-url>
+git clone https://github.com/RMAHCER/Developer-helper-for-telegram
 cd telegram-bot
 ```
 
